@@ -1,36 +1,36 @@
-const predictClassification = require("../services/inferenceService");
+const classifyImage = require("../services/inferenceService");
 const crypto = require("crypto");
-const storeData = require("../services/storeData");
-const loadAllData = require("../services/loadAllData");
+const saveData = require("../services/storeData");
+const loadData = require("../services/loadData");
 
-async function postPredictHandler(request, h) {
+async function handlerPredictionRequest(request, h) {
   const { image } = request.payload;
   const { model } = request.server.app;
 
-  const { label, suggestion } = await predictClassification(model, image);
-  const id = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
+  const { label, suggestion } = await classifyImage(model, image);
+  const recordId = crypto.randomUUID();
+  const timestamp = new Date().toISOString();
 
-  const data = {
-    id: id,
+  const record = {
+    id: recordId,
     result: label,
     suggestion: suggestion,
-    createdAt: createdAt,
+    createdAt: timestamp,
   };
 
-  await storeData(id, data);
+  await saveData(recordId, record);
 
   const response = h.response({
     status: "success",
     message: "Model is predicted successfully",
-    data,
+    data: record,
   });
   response.code(201);
   return response;
 }
 
-async function getAllDataHandler(request, h) {
-  const allData = await loadAllData();
+async function handleAllGetDataRequest(request, h) {
+  const allData = await loadData();
   const response = h.response({
     status: "success",
     data: allData,
@@ -39,4 +39,4 @@ async function getAllDataHandler(request, h) {
   return response;
 }
 
-module.exports = { postPredictHandler, getAllDataHandler };
+module.exports = { handlerPredictionRequest, handleAllGetDataRequest };
